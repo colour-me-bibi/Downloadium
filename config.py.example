@@ -1,2 +1,3 @@
 clientID = '<Client ID>'
 clientSecret = '<Client Secret>'
+saveDir = '/example/directory/'

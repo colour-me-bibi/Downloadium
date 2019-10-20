@@ -1,12 +1,25 @@
 import wget
 import urllib.parse
+import json
+import re
+# import threading
+import config
 
-# TODO read file line by line as JSON objects
-# TODO determine if GDrive url
-# TODO if Gdrive url 
+with open('songs-20191009.jsonl') as file:
+    for line in file:
+        lineJSON = json.loads(line)
 
-url = 'http://rehosts.fightthe.pw/csc-2019-05/Joe%20Satriani%20-%20Killer%20Bee%20Bop.zip'
-decodedUrl = urllib.parse.unquote(url)
-saveDir = '/disks/Benny2TB/db/Songs/'
-wget.download(decodedUrl, saveDir)
-print(f'\ndownloaded {decodedUrl} to {saveDir}')
+        md5_hash = lineJSON['md5_hash']
+        url = urllib.parse.unquote(lineJSON['url'])
+
+        domain = re.match(r'.*?://(.*?)/', url).group(1)
+
+        # TODO make downloads asynchronous
+
+        if 'drive.google' in domain:
+            # use drive api            
+            pass
+        else:
+            wget.download(urllib.parse.unquote(url), config.saveDir)
+
+        print(f'\ndownloaded {url} to {config.saveDir}')
