@@ -8,9 +8,11 @@ import config
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
 
+# TODO comments
+
 # Google Drive authentication
 gauth = GoogleAuth()
-# gauth.LocalWebserverAuth()
+# gauth.LocalWebserverAuth() # Needed only for initial auth
 drive = GoogleDrive(gauth)
 
 def gDriveDownload(url):
@@ -49,8 +51,12 @@ with open('songs-20191009.jsonl') as file:
         domain = re.search(r'.*?://(.*?)/', url).group(1)
 
         if 'drive.google' in domain:
-            gThread = threading.Thread(target=gDriveDownload, args=[url])
-            gThread.start()
+            gDriveDownload(url)
+            # THREADING !!! Google don't like !!!
+            # gThread = threading.Thread(target=gDriveDownload, args=[url])
+            # gThread.start()
         else:
-            dThread = threading.Thread(target=download(url), args=[url])
-            dThread.start()
+            download(url)
+            # THREADING !!! I'm scared !!!
+            # dThread = threading.Thread(target=download(url), args=[url])
+            # dThread.start()
