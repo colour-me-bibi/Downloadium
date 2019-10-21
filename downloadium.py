@@ -2,8 +2,27 @@ import wget
 import urllib.parse
 import json
 import re
-# import threading
+import threading
 import config
+from pydrive.auth import GoogleAuth
+from pydrive.drive import GoogleDrive
+
+# Google Drive authentication
+gauth = GoogleAuth()
+gauth.LocalWebserverAuth()
+drive = GoogleDrive(gauth)
+
+def gDriveDownload(url):
+    fileID = re.search(r'//.*(?:folders|d)/([^/,\n]*)', url).group(1)
+    print(fileID)
+    driveFile = drive.CreateFile({'id': fileID})
+    print('title: %s, mimeType: %s' % (driveFile['title'], driveFile['mimeType']))
+    # pass
+
+def download(url):
+    pass
+    # wget.download(url, config.saveDir)
+    # print(f'\ndownloaded {url} to {config.saveDir}')
 
 with open('songs-20191009.jsonl') as file:
     for line in file:
@@ -12,14 +31,14 @@ with open('songs-20191009.jsonl') as file:
         md5_hash = lineJSON['md5_hash']
         url = urllib.parse.unquote(lineJSON['url'])
 
-        domain = re.match(r'.*?://(.*?)/', url).group(1)
+        domain = re.search(r'.*?://(.*?)/', url).group(1)
 
-        # TODO make downloads asynchronous
+        # TODO thread downloads
 
         if 'drive.google' in domain:
-            # use drive api            
-            pass
+            gDriveDownload(url)
+            # gThread = threading.Thread(target=gDriveDownload, args=[url])
+            # gThread.start()
         else:
-            wget.download(urllib.parse.unquote(url), config.saveDir)
-
-        print(f'\ndownloaded {url} to {config.saveDir}')
+            dThread = threading.Thread(target=download(url), args=[url])
+            dThread.start()
