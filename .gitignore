@@ -1,5 +1,7 @@
 config.py
 client_secrets.json
 *.jsonl
+*.txt
 
 __pycache__/
+downloaded/
