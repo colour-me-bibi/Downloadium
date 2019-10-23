@@ -12,12 +12,23 @@ from pydrive.drive import GoogleDrive
 
 # Google Drive authentication
 gauth = GoogleAuth()
-# gauth.LocalWebserverAuth() # Needed only for initial auth
+
+gauth.LoadCredentialsFile('mycreds.txt')
+
+if gauth.credentials == None:
+    gauth.LocalWebserverAuth() # Needed only for initial auth
+elif gauth.access_token_expired:
+    gauth.Refresh()
+else:
+    gauth.Authorize()
+
+gauth.SaveCredentialsFile('mycreds.txt')
+
 drive = GoogleDrive(gauth)
 
 def writeLine(url):
     with open('downloaded.txt', 'a') as writeFile:
-            writeFile.write(url + '\n')
+        writeFile.write(url + '\n')
 
 def gDriveDownload(url):
     fileID = re.search(r'//.*(?:/folders|/d)/([^/,\n]*)', url).group(1)
@@ -41,26 +52,43 @@ def gDriveDownload(url):
         driveFile.GetContentFile(f"{config.saveDir}/{driveFile['title']}", mimetype=driveFile['mimeType'])
         writeLine(url)
 
-def download(url):
+def downloadDirect(url):
     wget.download(url, config.saveDir)
     writeLine(url)
 
-with open('songs-20191009.jsonl') as file:
-    for line in file:
-        lineJSON = json.loads(line)
+def download():
+    with open('songs-20191009.jsonl') as file:
+        for line in file:
+            lineJSON = json.loads(line)
 
-        md5_hash = lineJSON['md5_hash']
-        url = urllib.parse.unquote(lineJSON['url'])
+            url = urllib.parse.unquote(lineJSON['url'])
 
-        domain = re.search(r'.*?://(.*?)/', url).group(1)
+            domain = re.search(r'.*?://(.*?)/', url).group(1)
 
-        if 'drive.google' in domain:
-            gDriveDownload(url)
-            # THREADING !!! Google don't like !!!
-            # gThread = threading.Thread(target=gDriveDownload, args=[url])
-            # gThread.start()
-        else:
-            download(url)
-            # THREADING !!! I'm scared !!!
-            # dThread = threading.Thread(target=download(url), args=[url])
-            # dThread.start()
+            if 'drive.google' in domain:
+                try:
+                    gDriveDownload(url)
+                except (KeyboardInterrupt, SystemExit):
+                    raise
+                except:
+                    print(f'Could not download {url}')
+                    with open('rejects.jsonl', 'a') as rejectsFile:
+                        rejectsFile.write(url + '\n')
+                # THREADING !!! Google don't like !!!
+                # gThread = threading.Thread(target=gDriveDownload, args=[url])
+                # gThread.start()
+            else:
+                try:
+                    downloadDirect(url)
+                except (KeyboardInterrupt, SystemExit):
+                    raise
+                except:
+                    print(f'Could not download {url}')
+                    with open('rejects.jsonl', 'a') as rejectsFile:
+                        rejectsFile.write(url + '\n')
+                # THREADING !!! I'm scared !!!
+                # dThread = threading.Thread(target=download(url), args=[url])
+                # dThread.start()
+
+if __name__ == '__main__':
+    download()
