@@ -8,27 +8,19 @@ import config
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
 
-# TODO comments
+# TODO comments, modularize
 
 # Google Drive authentication
 gauth = GoogleAuth()
-
-gauth.LoadCredentialsFile('mycreds.txt')
-
-if gauth.credentials == None:
-    gauth.LocalWebserverAuth() # Needed only for initial auth
-elif gauth.access_token_expired:
-    gauth.Refresh()
-else:
-    gauth.Authorize()
-
-gauth.SaveCredentialsFile('mycreds.txt')
+gauth.LocalWebserverAuth()  # Needed only for initial auth
 
 drive = GoogleDrive(gauth)
+
 
 def writeLine(url):
     with open('downloaded.txt', 'a') as writeFile:
         writeFile.write(url + '\n')
+
 
 def gDriveDownload(url):
     fileID = re.search(r'//.*(?:/folders|/d)/([^/,\n]*)', url).group(1)
@@ -36,7 +28,8 @@ def gDriveDownload(url):
     driveFile = drive.CreateFile({'id': fileID})
 
     if 'folder' in driveFile['mimeType']:
-        fileList = drive.ListFile({'q': "'{}' in parents and trashed=false".format(fileID)}).GetList()
+        fileList = drive.ListFile(
+            {'q': "'{}' in parents and trashed=false".format(fileID)}).GetList()
 
         nestedDir = f"{config.saveDir}/{driveFile['title']}"
 
@@ -45,16 +38,20 @@ def gDriveDownload(url):
 
         for siblingFile in fileList:
             if 'folder' not in siblingFile['mimeType']:
-                siblingFile.GetContentFile(f"{nestedDir}/{siblingFile['title']}", mimetype=siblingFile['mimeType'])
+                siblingFile.GetContentFile(
+                    f"{nestedDir}/{siblingFile['title']}", mimetype=siblingFile['mimeType'])
 
         writeLine(url)
     else:
-        driveFile.GetContentFile(f"{config.saveDir}/{driveFile['title']}", mimetype=driveFile['mimeType'])
+        driveFile.GetContentFile(
+            f"{config.saveDir}/{driveFile['title']}", mimetype=driveFile['mimeType'])
         writeLine(url)
+
 
 def downloadDirect(url):
     wget.download(url, config.saveDir)
     writeLine(url)
+
 
 def download():
     with open('songs-20191009.jsonl') as file:
@@ -89,6 +86,7 @@ def download():
                 # THREADING !!! I'm scared !!!
                 # dThread = threading.Thread(target=download(url), args=[url])
                 # dThread.start()
+
 
 if __name__ == '__main__':
     download()
