@@ -1,7 +1,5 @@
-config.py
-client_secrets.json
-*.jsonl
-*.txt
-
+# Ignore generated python files
 __pycache__/
-downloaded/
+
+# Ignore personal Google Api credentials
+client_secrets.json
